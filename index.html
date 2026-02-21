@@ -444,7 +444,7 @@
   <!-- ── Header ── -->
   <header class="header">
     <div class="header-top">
-      <h1>Volleyball <em>Tüfi</em></h1>
+      <h1>Volley<em>ball</em></h1>
       <span id="regStatusBadge" class="status-badge closed">Loading…</span>
     </div>
     <p class="header-sub" id="headerSub">Checking registration window…</p>
@@ -543,13 +543,30 @@
 // ============================================================
 // CONFIG — paste your Apps Script Web App URL here
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbzVN3CB9w_qFl2wq7Xqv3ONpIEATFv6rtgQaqOoNpTr0Po8FLs4meqX1cnGQMn-bkFh/exec;
+const API_URL = "https://script.google.com/macros/s/AKfycbzVN3CB9w_qFl2wq7Xqv3ONpIEATFv6rtgQaqOoNpTr0Po8FLs4meqX1cnGQMn-bkFh/exec";
 
 // ============================================================
 // State
 // ============================================================
 let publicData = null;
 const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+// ============================================================
+// Cookie helpers — store code for 8 days (one week + buffer)
+// ============================================================
+function saveCodeCookie(code) {
+  const expires = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toUTCString();
+  document.cookie = `vball_code=${encodeURIComponent(code)};expires=${expires};path=/;SameSite=Lax`;
+}
+
+function loadCodeCookie() {
+  const match = document.cookie.match(/(?:^|;\s*)vball_code=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function clearCodeCookie() {
+  document.cookie = "vball_code=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;SameSite=Lax";
+}
 
 // ============================================================
 // API
@@ -694,6 +711,7 @@ async function handleRegister() {
           <span class="code-display">${res.code}</span>
           You'll need it to modify or cancel.
         </div>`;
+      saveCodeCookie(res.code);
       document.getElementById("regName").value = "";
       document.getElementById("regExtra").value = "0";
       loadData();
@@ -836,6 +854,7 @@ async function handleCancel(code, targetId) {
     const res = await apiPost({ action: "cancel", code, targetId });
     resultEl.innerHTML = `<div class="alert ${res.success ? 'success' : 'error'} fadein">${escHtml(res.message || res.error)}</div>`;
     if (res.success) {
+      clearCodeCookie();
       loadData();
       document.getElementById("manageResult").innerHTML = "";
       document.getElementById("manageCode").value = "";
@@ -900,6 +919,15 @@ document.addEventListener("keydown", e => {
 // ============================================================
 loadData();
 setInterval(loadData, 60000); // auto-refresh every minute
+
+// Pre-fill saved code and auto-lookup if one exists
+const savedCode = loadCodeCookie();
+if (savedCode) {
+  const manageInput = document.getElementById("manageCode");
+  manageInput.value = savedCode;
+  // Small delay so the page has rendered first
+  setTimeout(() => handleCheck(), 600);
+}
 </script>
 </body>
 </html>
