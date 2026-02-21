@@ -543,7 +543,7 @@
 // ============================================================
 // CONFIG — paste your Apps Script Web App URL here
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbzVN3CB9w_qFl2wq7Xqv3ONpIEATFv6rtgQaqOoNpTr0Po8FLs4meqX1cnGQMn-bkFh/exec";
+const API_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 
 // ============================================================
 // State
@@ -555,17 +555,16 @@ const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","
 // API
 // ============================================================
 async function apiFetch(action, params = {}) {
-  const url = API_URL + "?action=" + action + "&" + new URLSearchParams(params);
+  params.action = action;
+  const url = API_URL + "?" + new URLSearchParams(params);
   const res = await fetch(url);
   return res.json();
 }
 
+// All calls go via GET — Apps Script blocks JSON POST from browsers (CORS preflight)
 async function apiPost(body) {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
+  const url = API_URL + "?" + new URLSearchParams(body);
+  const res = await fetch(url);
   return res.json();
 }
 
